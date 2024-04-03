@@ -1,0 +1,75 @@
+-- A. Pizza Metrics
+-- How many pizzas were ordered?
+-- select count(*) as order_pizzas
+-- from customer_orders
+
+
+-- How many unique customer orders were made?
+-- select count (distinct order_id) as unique_orders
+-- from customer_orders
+
+-- How many successful orders were delivered by each runner?
+-- select runner_id, count(order_id) as successful_orders
+-- from runner_orders
+-- where pickup_time <> 'null'
+-- group by runner_id
+
+-- -- How many of each type of pizza was delivered?
+-- select c.pizza_id, count(c.order_id)
+-- from customer_orders as c
+-- join runner_orders as r on r.order_id = c.order_id
+-- where pickup_time <> 'null'
+-- group by c.pizza_id
+
+
+-- -- How many Vegetarian and Meatlovers were ordered by each customer?
+-- select c.customer_id, p.pizza_name, count (c.order_id)
+-- from pizza_names as p
+-- join customer_orders as c on c.pizza_id = p.pizza_id
+-- group by c.customer_id, p.pizza_name
+
+-- -- What was the maximum number of pizzas delivered in a single order?
+-- select order_id, count(pizza_id) as Max_Pizza_Order
+-- from customer_orders
+-- group by order_id
+-- order by count(pizza_id) desc
+-- limit 1
+
+-- For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
+
+
+SELECT co.customer_id,
+       SUM(CASE WHEN co.exclusions <> 'null' OR co.extras <> 'null' THEN 1 ELSE 0 END) AS pizzas_with_changes,
+       SUM(CASE WHEN co.exclusions = 'null' AND co.extras = 'null' THEN 1 ELSE 0 END) AS pizzas_no_changes
+FROM customer_orders co
+JOIN runner_orders ro ON co.order_id = ro.order_id
+WHERE ro.pickup_time<>'null'
+GROUP BY co.customer_id
+
+
+-- -- How many pizzas were delivered that had both exclusions and extras?
+-- with changes as (
+-- select order_id, pizza_id,
+-- (CASE
+--     WHEN exclusions = 'null'  or exclusions = '' or exclusions is null THEN 0
+--     ELSE 1
+--     END) as exclusions,
+-- (CASE
+--     WHEN extras IS null OR extras = 'null' or extras = '' then 0
+--     else 1
+--     end) as extras
+-- from customer_orders)
+-- select count(ch.order_id) as No_Pizzas_w_exclusions_and_extras
+-- FROM CHANGES as ch
+-- join runner_orders as r on r.order_id = ch.order_id
+-- where ch.exclusions = 1 and ch.extras = 1 and r.pickup_time <> 'null'
+
+-- -- What was the total volume of pizzas ordered for each hour of the day?
+-- select hour(order_time) as hour, count(order_id) as volume_per_hour
+-- from customer_orders
+-- group by hour(order_time)
+
+-- -- What was the volume of orders for each day of the week?
+-- select dayname(order_time) as day_week, count(order_id) as volume_per_week
+-- from customer_orders
+-- group by dayname(order_time)
